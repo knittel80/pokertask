@@ -102,27 +102,47 @@ void resetHand(Hand* hand)
 	initHand(hand);
 }
 
-// Return value will be > 0 if it is a royal flush
-// and 0 if it is not.
-int isRoyalFlush(Hand* hand)
+int nextPip(Pips initialPips)
 {
-	int checkValue = hand->availableCards[Ten]; 
-	for(int idx=Jack; idx<NumberOfPips; ++idx)
+	Pips nextPips = initialPips + 1;
+	if(NumberOfPips==nextPips){
+		nextPips=Two;
+	}
+	return nextPips;
+}
+
+int checkStraightFlushFrom(Hand* hand, Pips startingPips)
+{
+	int checkValue = hand->availableCards[startingPips];
+	Pips currentPips = startingPips;
+	for(int numberOfCardsChecked=1; numberOfCardsChecked<5; ++numberOfCardsChecked)
 	{
-		checkValue &= hand->availableCards[idx];
+		if(0==checkValue) {
+			break;
+		}
+		currentPips = nextPip(currentPips);
+		checkValue &= hand->availableCards[currentPips];
 	}
 	return checkValue;
 }
 
+
+// Return value will be > 0 if it is a royal flush
+// and 0 if it is not.
+int isRoyalFlush(Hand* hand)
+{
+	return checkStraightFlushFrom(hand,Ten);
+}
+
 int isStraightFlush(Hand* hand)
 {
-	// Implementation not yet finished
-	/*
-	int checkValue = 0;hand->availableCards[Ten]; 
-	for(int idx=Jack; idx<NumberOfPips; ++idx)
+	for(Pips startingPip=Two; startingPip<NumberOfPips;++startingPip)
 	{
-		checkValue &= hand->availableCards[idx];
-	}*/
+		int result = checkStraightFlushFrom(hand,startingPip);
+		if(result>0) {
+			return result;
+		}
+	}
 	return 0;
 }
 
