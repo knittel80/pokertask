@@ -146,6 +146,43 @@ int isStraightFlush(Hand* hand)
 	return 0;
 }
 
+/* Implementation of checks for encoded integer values as used in hand->availableCards array.*/
+
+// Clubs=1, Diamonds=1<<1, Hearts=1<<2, Spades=1<<3, Suit_End=1<<4
+
+
+// Will return 1, if the encodedPipsValue contains the given suit.
+// Otherwise it will return 0 
+int hasSuit(Suit suit, int encodedPipsValue)
+{
+	if(encodedPipsValue & suit)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+/* Will Return 1 if there are more than 4 cards of a single suit. Otherwise it will return 0. */
+int isFlush(Hand* hand)
+{
+	int numberOfClubs = 0;
+	int numberOfDiamonds = 0;
+	int numberOfHearts = 0;
+	int numberOfSpades = 0;
+	for(Pips currentPip=Two; currentPip<NumberOfPips;++currentPip)
+	{
+		numberOfClubs += hasSuit(Clubs,hand->availableCards[currentPip]);
+		numberOfDiamonds += hasSuit(Diamonds,hand->availableCards[currentPip]);
+		numberOfHearts += hasSuit(Hearts,hand->availableCards[currentPip]);
+		numberOfSpades += hasSuit(Spades,hand->availableCards[currentPip]);
+	}
+	if( numberOfClubs > 4 || numberOfDiamonds > 4 || numberOfHearts > 4 || numberOfSpades > 4)
+	{
+		return 1;
+	}
+	return 0;
+}
+
 void addCardToHand(Hand* hand, Card* card)
 {
 	hand->availableCards[card->pips] += card->suit;
