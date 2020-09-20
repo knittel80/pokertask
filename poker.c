@@ -3,12 +3,13 @@
 #include <time.h>
 
 enum Suit {
-	Clubs=0, Diamonds, Hearts, Spades, NoSuits
+	Clubs=1, Diamonds=1<<1, Hearts=1<<2, Spades=1<<3, Suit_End=1<<4
 };
 typedef enum Suit Suit;
 
+// Sorry for the Two=0
 enum Pips {
-	Ace=0, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, NumberOfPips
+	Two=0, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace, NumberOfPips
 };
 typedef enum Pips Pips;
 
@@ -42,13 +43,18 @@ typedef struct Deck Deck;
 void initDeck(Deck* deck)
 {
 	int cardCtr = 0;
-	for(int suitCtr = 0; suitCtr < NoSuits; ++suitCtr)
+	//For the suits a somewhat unconvential loop is need, since the values are not contigious.
+	for(int suitCtr = Clubs; suitCtr < Suit_End; suitCtr<<=1)
 	{
+		printf("----------------------------------------------------------------\n");
+		printf("The suitCtr counter is %d.\n", suitCtr);
 		for(int pipsCtr = 0; pipsCtr < NumberOfPips; ++pipsCtr)
 		{
+			printf("Accessing cards index: %d\n", cardCtr);
 			deck->cards[cardCtr].suit = (Suit)suitCtr;
 			deck->cards[cardCtr].pips = (Pips)pipsCtr;
 			++cardCtr;
+
 		}
 	}
 	deck->topOfDeck = NoOfCardsInDeck - 1;
@@ -66,8 +72,18 @@ void shuffleDeck(Deck* deck)
 
 struct Hand
 {
-	int pips[NumberOfPips];
-	int suits[NoSuits];
+	// This data structure encodes the information which particular cards are in a hand.
+	// The array index corresponds to the pip value of a card.
+	// The array value will be the sum of the corresponding suit values, which are
+	// present in the hand.
+	// Examples:
+	// The hand does not have a TWO:
+	// availableCards[Two] = 0;
+	// The hand has one queen, which is Hearts:
+	// availableCards[Queen] = Hearts;
+	// The hand has two tens, Diamonds and Clubs:
+	// availableCards[Ten] = Diamonds + Clubs;
+	int availableCards[NumberOfPips];
 };
 typedef struct Hand Hand;
 #define NoOfCardsPerHand 7
@@ -77,11 +93,7 @@ void initHand(Hand* hand)
 	int idx = 0;
 	for( ; idx<NumberOfPips; ++idx)
 	{
-		hand->pips[idx] = 0;
-	}
-	for(idx=0; idx<NoSuits; ++idx)
-	{
-		hand->suits[idx] = 0;
+		hand->availableCards[idx] = 0;
 	}
 }
 
@@ -90,22 +102,33 @@ void resetHand(Hand* hand)
 	initHand(hand);
 }
 
-int isFlush(Hand* hand)
+// Return value will be > 0 if it is a royal flush
+// and 0 if it is not.
+int isRoyalFlush(Hand* hand)
 {
-	for(int idx=0; idx<NoSuits; ++idx)
+	int checkValue = hand->availableCards[Ten]; 
+	for(int idx=Jack; idx<NumberOfPips; ++idx)
 	{
-		if(hand->suits[idx] >= 5)
-		{
-			return 1;
-		}
+		checkValue &= hand->availableCards[idx];
 	}
+	return checkValue;
+}
+
+int isStraightFlush(Hand* hand)
+{
+	// Implementation not yet finished
+	/*
+	int checkValue = 0;hand->availableCards[Ten]; 
+	for(int idx=Jack; idx<NumberOfPips; ++idx)
+	{
+		checkValue &= hand->availableCards[idx];
+	}*/
 	return 0;
 }
 
 void addCardToHand(Hand* hand, Card* card)
 {
-	++hand->pips[card->pips];
-	++hand->suits[card->suit];
+	hand->availableCards[card->pips] += card->suit;
 }
 
 void giveOutHand(Deck* deck, Hand* hand)
